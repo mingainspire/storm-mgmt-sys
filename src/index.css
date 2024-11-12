@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --card-height: 100%;
+  color-scheme: dark;
+}
+
+@layer components {
+  /* Dark mode base styles */
+  body {
+    @apply bg-gray-900 text-gray-100;
+  }
+
+  /* Consistent card styling */
+  .card {
+    @apply bg-gray-800 rounded-xl shadow-sm border border-gray-700 h-full;
+  }
+
+  .card-header {
+    @apply p-6 border-b border-gray-700;
+  }
+
+  .card-body {
+    @apply p-6;
+  }
+
+  /* Task cards */
+  .task-card {
+    @apply bg-gray-800 rounded-lg border border-gray-700 p-6 hover:border-blue-600 transition-colors;
+  }
+
+  /* Progress indicators */
+  .progress-bar {
+    @apply w-full h-2 bg-gray-700 rounded-full overflow-hidden;
+  }
+
+  .progress-bar-fill {
+    @apply h-full transition-all duration-500;
+  }
+
+  .progress-bar-fill-success {
+    @apply bg-green-600;
+  }
+
+  .progress-bar-fill-warning {
+    @apply bg-yellow-600;
+  }
+
+  .progress-bar-fill-error {
+    @apply bg-red-600;
+  }
+
+  /* Status badges */
+  .status-badge {
+    @apply px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .status-badge-success {
+    @apply bg-green-900 text-green-100;
+  }
+
+  .status-badge-warning {
+    @apply bg-yellow-900 text-yellow-100;
+  }
+
+  .status-badge-error {
+    @apply bg-red-900 text-red-100;
+  }
+
+  /* Interactive elements */
+  .btn {
+    @apply px-4 py-2 rounded-lg transition-colors flex items-center gap-2;
+  }
+
+  .btn-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-700 text-gray-200 hover:bg-gray-600;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700;
+  }
+
+  /* Grid layout for consistent card sizing */
+  .grid-layout {
+    @apply grid gap-6;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+
+  /* Workflow cards */
+  .workflow-card {
+    @apply bg-gray-800 rounded-xl p-6 border border-gray-700 h-full;
+  }
+
+  /* Example cards */
+  .example-card {
+    @apply p-6 bg-gray-800 rounded-lg border border-gray-700 h-full hover:border-blue-600 transition-colors;
+  }
+
+  /* Section backgrounds */
+  .section-bg-primary {
+    @apply bg-blue-900/20 border-blue-800/30;
+  }
+
+  .section-bg-secondary {
+    @apply bg-purple-900/20 border-purple-800/30;
+  }
+
+  .section-bg-success {
+    @apply bg-green-900/20 border-green-800/30;
+  }
+
+  .section-bg-warning {
+    @apply bg-yellow-900/20 border-yellow-800/30;
+  }
+
+  .section-bg-danger {
+    @apply bg-red-900/20 border-red-800/30;
+  }
+
+  /* Task steps */
+  .task-step {
+    @apply flex items-start gap-2 p-3 bg-gray-700 rounded-lg border border-gray-600;
+  }
+
+  .task-step-active {
+    @apply border-blue-600 bg-blue-900/20;
+  }
+
+  .task-step-completed {
+    @apply border-green-600 bg-green-900/20;
+  }
+
+  /* Agent communication */
+  .agent-message {
+    @apply p-4 rounded-lg border border-gray-700 bg-gray-800;
+  }
+
+  .agent-message-user {
+    @apply border-blue-600 bg-blue-900/20;
+  }
+
+  .agent-message-system {
+    @apply border-purple-600 bg-purple-900/20;
+  }
+}
