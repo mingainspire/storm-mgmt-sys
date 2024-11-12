@@ -1,93 +1,104 @@
-export interface MemoryPattern {
+import { v4 as uuidv4 } from 'uuid';
+import CryptoJS from 'crypto-js';
+
+export interface Timestamped {
+  createdAt: number;
+  updatedAt: number;
+  version: string;
+}
+
+export interface Shareable {
   id: string;
-  type: 'preference' | 'behavior' | 'skill' | 'directive';
+  collaboratorIds?: string[];
+  sharingPermissions?: 'private' | 'team' | 'public';
+}
+
+export interface EncryptionMetadata {
+  isEncrypted: boolean;
+  encryptionMethod?: 'AES' | 'RSA';
+}
+
+export interface Pattern extends Timestamped, Shareable, EncryptionMetadata {
+  id: string;
   description: string;
+  type: 'preference' | 'behavior' | 'skill' | 'other';
   confidence: number;
-  source: string;
-  timestamp: string;
-  context: string[];
-  status: 'active' | 'pending' | 'archived';
-  priority?: 'low' | 'medium' | 'high';
-  impact?: string[];
   relatedPatterns?: string[];
 }
 
-export interface KnowledgeBase {
+export interface KnowledgeBase extends Timestamped, Shareable, EncryptionMetadata {
   id: string;
   name: string;
-  description: string;
-  type: 'document' | 'conversation' | 'directive' | 'learning' | 'system';
-  entries: number;
-  lastUpdated: string;
-  category?: string;
+  description?: string;
+  dependencies?: string[];
   tags?: string[];
-  access?: 'public' | 'private' | 'shared';
-  format?: string;
-  source?: string;
-  version?: string;
-  dependencies?: string[];
 }
 
-export interface SystemDirective {
+export interface Directive extends Timestamped, Shareable, EncryptionMetadata {
   id: string;
   name: string;
-  description: string;
-  type: 'behavior' | 'communication' | 'learning' | 'security' | 'integration';
+  description?: string;
   priority: 'low' | 'medium' | 'high';
-  status: 'active' | 'inactive' | 'pending';
-  conditions?: string[];
-  actions?: string[];
-  constraints?: string[];
-  metadata?: {
-    author?: string;
-    created?: string;
-    modified?: string;
-    version?: string;
-  };
 }
 
-export interface SystemMessage {
-  id: string;
-  content: string;
-  type: 'input' | 'response' | 'error' | 'success' | 'system' | 'directive';
-  timestamp: string;
-  metadata?: {
-    source?: string;
-    context?: string;
-    priority?: 'low' | 'medium' | 'high';
-    tags?: string[];
-  };
-  relatedMessages?: string[];
-}
-
-export interface LearningObjective {
+export interface LearningObjective extends Timestamped, Shareable, EncryptionMetadata {
   id: string;
   name: string;
-  description: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'failed';
-  priority: 'low' | 'medium' | 'high';
+  description?: string;
   progress: number;
-  metrics?: {
-    accuracy?: number;
-    confidence?: number;
-    iterations?: number;
-  };
   dependencies?: string[];
-  outcomes?: string[];
 }
 
 export interface MemoryState {
-  patterns: MemoryPattern[];
+  patterns: Pattern[];
   knowledgeBases: KnowledgeBase[];
-  messages: SystemMessage[];
-  directives: SystemDirective[];
+  directives: Directive[];
   learningObjectives: LearningObjective[];
 }
 
-export interface MemoryAction {
-  type: 'RESET_MEMORY' | 'IMPORT_STATE' | 'ADD_PATTERN' | 'REMOVE_PATTERN' | 
-        'ADD_KNOWLEDGE' | 'REMOVE_KNOWLEDGE' | 'ADD_MESSAGE' | 'REMOVE_MESSAGE' |
-        'ADD_DIRECTIVE' | 'REMOVE_DIRECTIVE' | 'UPDATE_DIRECTIVE' |
-        'ADD_OBJECTIVE' | 'UPDATE_OBJECTIVE' | 'REMOVE_OBJECTIVE';
-  payload?: any;
+export class MemorySerializer {
+  static encrypt(data: any, secretKey: string): string {
+    return CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();
+  }
+
+  static decrypt(encryptedData: string, secretKey: string): any {
+    const bytes = CryptoJS.AES.decrypt(encryptedData, secretKey);
+    return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+  }
+
+  static createVersionedEntry<T extends Timestamped>(entry: Omit<T, 'createdAt' | 'updatedAt' | 'version'>): T {
+    const now = Date.now();
+    return {
+      ...entry,
+      id: entry.id || uuidv4(),
+      createdAt: now,
+      updatedAt: now,
+      version: '1.0.0'
+    } as T;
+  }
+
+  static updateVersion<T extends Timestamped>(entry: T): T {
+    const [major, minor, patch] = entry.version.split('.').map(Number);
+    return {
+      ...entry,
+      updatedAt: Date.now(),
+      version: `${major}.${minor}.${patch + 1}`
+    };
+  }
+}
+
+export function sanitizeForSharing<T extends Shareable>(
+  item: T, 
+  currentUserId: string, 
+  sharingLevel: 'private' | 'team' | 'public' = 'team'
+): T {
+  return {
+    ...item,
+    collaboratorIds: sharingLevel === 'private' 
+      ? [currentUserId] 
+      : sharingLevel === 'team' 
+        ? item.collaboratorIds || [currentUserId] 
+        : [],
+    sharingPermissions: sharingLevel
+  };
 }

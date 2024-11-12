@@ -1,52 +1,133 @@
-import { useReducer, useEffect } from 'react';
-import { memoryReducer, initialMemoryState } from './memoryReducer';
-import { MemoryState } from './types';
+import { useReducer } from 'react';
+import { 
+  MemoryState, 
+  MemoryPattern, 
+  KnowledgeBase, 
+  SystemMessage, 
+  SystemDirective, 
+  LearningObjective,
+  MemoryAction
+} from './types';
 
-const STORAGE_KEY = 'system_memory_state';
+const initialState: MemoryState = {
+  patterns: [],
+  knowledge: [],
+  messages: [],
+  directives: [],
+  learningObjectives: [],
+  skillReconstruction: {
+    skills: {},
+    learningPatterns: {}
+  }
+};
+
+function memoryReducer(state: MemoryState, action: MemoryAction): MemoryState {
+  switch (action.type) {
+    case 'ADD_PATTERN':
+      return { ...state, patterns: [...state.patterns, action.payload] };
+    
+    case 'REMOVE_PATTERN':
+      return { 
+        ...state, 
+        patterns: state.patterns.filter(p => p.id !== action.payload) 
+      };
+    
+    case 'ADD_KNOWLEDGE':
+      return { ...state, knowledge: [...state.knowledge, action.payload] };
+    
+    case 'REMOVE_KNOWLEDGE':
+      return {
+        ...state,
+        knowledge: state.knowledge.filter(kb => kb.id !== action.payload)
+      };
+    
+    case 'ADD_MESSAGE':
+      return { ...state, messages: [...state.messages, action.payload] };
+    
+    case 'REMOVE_MESSAGE':
+      return {
+        ...state,
+        messages: state.messages.filter(msg => msg.id !== action.payload)
+      };
+    
+    case 'ADD_DIRECTIVE':
+      return { ...state, directives: [...state.directives, action.payload] };
+    
+    case 'REMOVE_DIRECTIVE':
+      return {
+        ...state,
+        directives: state.directives.filter(dir => dir.id !== action.payload)
+      };
+    
+    case 'ADD_LEARNING_OBJECTIVE':
+      return { 
+        ...state, 
+        learningObjectives: [...state.learningObjectives, action.payload] 
+      };
+    
+    case 'IMPORT_STATE':
+      return { 
+        ...state, 
+        ...action.payload,
+        patterns: action.payload.patterns || state.patterns,
+        knowledge: action.payload.knowledge || state.knowledge,
+        messages: action.payload.messages || state.messages,
+        directives: action.payload.directives || state.directives,
+        learningObjectives: action.payload.learningObjectives || state.learningObjectives
+      };
+    
+    case 'RECONSTRUCT_SKILLS': {
+      const reconstructedSkills = Object.fromEntries(
+        state.patterns
+          .filter(p => p.type === 'skill')
+          .map(skill => [
+            skill.id, 
+            {
+              type: skill.type,
+              complexity: skill.confidence,
+              lastUsed: skill.timestamp || new Date().toISOString(),
+              usageFrequency: 1,
+              reconstructionConfidence: skill.confidence,
+              dependencies: skill.context
+            }
+          ])
+      );
+
+      return { 
+        ...state, 
+        skillReconstruction: {
+          skills: reconstructedSkills,
+          learningPatterns: state.skillReconstruction.learningPatterns
+        }
+      };
+    }
+
+    default:
+      return state;
+  }
+}
 
 export function useMemoryState() {
-  const [state, dispatch] = useReducer(memoryReducer, initialMemoryState, () => {
-    const savedState = localStorage.getItem(STORAGE_KEY);
-    return savedState ? JSON.parse(savedState) : initialMemoryState;
-  });
+  const [state, dispatch] = useReducer(memoryReducer, initialState);
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
-
-  const exportState = () => {
-    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `system-memory-${new Date().toISOString()}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  // Additional utility functions can be added here
+  const addPattern = (pattern: MemoryPattern) => {
+    dispatch({ type: 'ADD_PATTERN', payload: pattern });
   };
 
-  const importState = async (file: File) => {
-    try {
-      const text = await file.text();
-      const importedState: MemoryState = JSON.parse(text);
-      dispatch({ type: 'IMPORT_STATE', payload: importedState });
-      return true;
-    } catch (error) {
-      console.error('Failed to import state:', error);
-      return false;
-    }
+  const removePattern = (patternId: string) => {
+    dispatch({ type: 'REMOVE_PATTERN', payload: patternId });
   };
 
-  const resetState = () => {
-    dispatch({ type: 'RESET_MEMORY' });
+  const reconstructSkills = () => {
+    dispatch({ type: 'RECONSTRUCT_SKILLS' });
   };
 
-  return {
-    state,
+  return { 
+    state, 
     dispatch,
-    exportState,
-    importState,
-    resetState
+    addPattern,
+    removePattern,
+    reconstructSkills
   };
 }
