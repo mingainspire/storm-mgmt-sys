@@ -1,55 +1,30 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock, AlertTriangle } from 'lucide-react';
+import { useIntegrationState } from './providers/useIntegrationState';
 import type { Task } from '../types';
 
-const tasks: Task[] = [
-  {
-    id: '1',
-    title: 'Process monthly data reports',
-    status: 'in_progress',
-    priority: 'high',
-    assignedAgent: 'Task Processor',
-    progress: 45,
-    createdAt: '2024-03-10T08:00:00Z',
-    deadline: '2024-03-11T17:00:00Z',
-    workflow: '1',
-  },
-  {
-    id: '2',
-    title: 'Generate content for blog posts',
-    status: 'pending',
-    priority: 'medium',
-    progress: 0,
-    createdAt: '2024-03-10T09:30:00Z',
-    deadline: '2024-03-12T12:00:00Z',
-    workflow: '2',
-  },
-  {
-    id: '3',
-    title: 'Analyze customer feedback',
-    status: 'failed',
-    priority: 'high',
-    progress: 65,
-    createdAt: '2024-03-09T14:00:00Z',
-    deadline: '2024-03-10T23:00:00Z',
-    workflow: '1',
-  },
-];
-
-const priorityColors = {
-  low: 'bg-blue-900 text-blue-100',
-  medium: 'bg-yellow-900 text-yellow-100',
-  high: 'bg-red-900 text-red-100',
-};
-
-const statusColors = {
-  pending: 'bg-gray-800',
-  in_progress: 'bg-blue-900',
-  completed: 'bg-green-900',
-  failed: 'bg-red-900',
-};
-
 export default function TaskQueue() {
+  const { state } = useIntegrationState();
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  useEffect(() => {
+    const fetchedTasks = state.integrations.flatMap(integration => integration.tasks || []);
+    setTasks(fetchedTasks);
+  }, [state]);
+
+  const priorityColors = {
+    low: 'bg-blue-900 text-blue-100',
+    medium: 'bg-yellow-900 text-yellow-100',
+    high: 'bg-red-900 text-red-100',
+  };
+
+  const statusColors = {
+    pending: 'bg-gray-800',
+    in_progress: 'bg-blue-900',
+    completed: 'bg-green-900',
+    failed: 'bg-red-900',
+  };
+
   return (
     <div className="bg-gray-800 rounded-xl shadow-sm border border-gray-700">
       <div className="p-6 border-b border-gray-700 flex justify-between items-center">

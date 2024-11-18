@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Share2, Shield, Code, Brain, Target, MessageSquare, Workflow, Zap, Settings, Box, ChevronDown, Plus, AlertTriangle, Check, Globe, Terminal, Database } from 'lucide-react';
 import NetworkGraph from './memory/NetworkGraph';
 import { MemoryState, MemoryPattern } from './memory/types';
+import { useIntegrationState } from './providers/useIntegrationState';
 
 interface SystemComponent {
   id: string;
@@ -23,73 +24,36 @@ interface SystemComponent {
   potentialConnections?: string[];
 }
 
-const systemComponents: SystemComponent[] = [
-  {
-    id: '1',
-    name: 'Guardian Defense',
-    type: 'security',
-    status: 'active',
-    currentTask: {
-      name: 'Network Vulnerability Analysis',
-      progress: 65,
-      steps: [
-        'Port scanning',
-        'Service enumeration',
-        'Vulnerability assessment',
-        'Report generation'
-      ],
-      currentStep: 2
-    },
-    capabilities: [
-      'Threat detection',
-      'Intrusion prevention',
-      'Security auditing',
-      'Incident response'
-    ],
-    metrics: {
-      tasksCompleted: 128,
-      learningProgress: 78,
-      adaptationRate: 92
-    },
-    potentialConnections: ['3D Model Assistant', 'Data Analysis Hub']
-  },
-  {
-    id: '2',
-    name: '3D Model Assistant',
-    type: 'development',
-    status: 'processing',
-    currentTask: {
-      name: 'Drone Component Design',
-      progress: 45,
-      steps: [
-        'Model specification',
-        'Component design',
-        'Structural analysis',
-        'Export for printing'
-      ],
-      currentStep: 1
-    },
-    capabilities: [
-      '3D modeling',
-      'CAD optimization',
-      'Print preparation',
-      'Design validation'
-    ],
-    metrics: {
-      tasksCompleted: 89,
-      learningProgress: 85,
-      adaptationRate: 88
-    },
-    potentialConnections: ['Guardian Defense', 'Simulation Environment']
-  }
-];
-
 export default function ActiveSystems() {
-  const [components, setComponents] = useState<SystemComponent[]>(systemComponents);
+  const { state } = useIntegrationState();
+  const [components, setComponents] = useState<SystemComponent[]>([]);
   const [selectedComponent, setSelectedComponent] = useState<SystemComponent | null>(null);
   const [showMetrics, setShowMetrics] = useState(true);
   const [message, setMessage] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'network'>('list');
+
+  useEffect(() => {
+    const fetchedComponents = state.integrations.map(integration => ({
+      id: integration.id,
+      name: integration.name,
+      type: integration.type === 'api' ? 'analysis' : integration.type === 'database' ? 'development' : 'security',
+      status: integration.status === 'active' ? 'active' : 'processing',
+      currentTask: {
+        name: 'Sample Task',
+        progress: 50,
+        steps: ['Step 1', 'Step 2', 'Step 3'],
+        currentStep: 1
+      },
+      capabilities: ['Capability 1', 'Capability 2'],
+      metrics: {
+        tasksCompleted: integration.metrics.requests,
+        learningProgress: integration.metrics.uptime,
+        adaptationRate: integration.metrics.latency
+      },
+      potentialConnections: []
+    }));
+    setComponents(fetchedComponents);
+  }, [state]);
 
   const handleSendMessage = (componentId: string) => {
     if (!message.trim()) return;
@@ -157,9 +121,86 @@ export default function ActiveSystems() {
           {viewMode === 'list' ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {components.map(component => (
-                // ... (previous component rendering code remains the same)
-                <div key={component.id}>
-                  {/* Existing component card */}
+                <div key={component.id} className="p-6 bg-gray-800 rounded-lg border border-gray-700">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      {component.type === 'security' ? (
+                        <Shield className="w-5 h-5 text-red-500 mt-0.5" />
+                      ) : component.type === 'development' ? (
+                        <Code className="w-5 h-5 text-green-500 mt-0.5" />
+                      ) : (
+                        <Brain className="w-5 h-5 text-blue-500 mt-0.5" />
+                      )}
+                      <div>
+                        <h4 className="font-medium text-white">{component.name}</h4>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`px-2 py-0.5 rounded-full text-xs ${
+                            component.status === 'active' ? 'bg-green-100 text-green-800' :
+                            component.status === 'learning' ? 'bg-blue-100 text-blue-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {component.status}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {showMetrics && (
+                    <div className="grid grid-cols-3 gap-4 mt-4">
+                      <div className="p-3 bg-blue-50 rounded-lg">
+                        <div className="text-sm text-blue-600">Tasks Completed</div>
+                        <div className="text-lg font-semibold text-blue-900">
+                          {component.metrics.tasksCompleted}
+                        </div>
+                      </div>
+                      <div className="p-3 bg-green-50 rounded-lg">
+                        <div className="text-sm text-green-600">Learning Progress</div>
+                        <div className="text-lg font-semibold text-green-900">
+                          {component.metrics.learningProgress}%
+                        </div>
+                      </div>
+                      <div className="p-3 bg-purple-50 rounded-lg">
+                        <div className="text-sm text-purple-600">Adaptation Rate</div>
+                        <div className="text-lg font-semibold text-purple-900">
+                          {component.metrics.adaptationRate}ms
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedComponent?.id === component.id && (
+                    <div className="mt-4 space-y-4">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-900 mb-2">Capabilities</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {component.capabilities.map((cap, idx) => (
+                            <span
+                              key={idx}
+                              className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs"
+                            >
+                              {cap}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-900 mb-2">Potential Connections</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {component.potentialConnections?.map((conn, idx) => (
+                            <div
+                              key={idx}
+                              className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-xs flex items-center gap-2"
+                            >
+                              <Globe className="w-3 h-3" />
+                              {conn}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

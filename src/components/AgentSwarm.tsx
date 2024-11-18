@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Brain, GitBranch, Network, Target, Users, MessageSquare, Workflow, Zap, Settings } from 'lucide-react';
+import { useIntegrationState } from './providers/useIntegrationState';
 
 interface SwarmAgent {
   id: string;
@@ -39,83 +40,22 @@ interface SwarmTask {
   }[];
 }
 
-const initialAgents: SwarmAgent[] = [
-  {
-    id: 'agent-1',
-    name: 'Primary Coordinator',
-    model: 'gpt-4',
-    type: 'coordinator',
-    status: 'active',
-    instructions: 'Coordinate task distribution and agent collaboration',
-    capabilities: ['task_distribution', 'workflow_optimization', 'agent_coordination'],
-    functions: [
-      {
-        name: 'transfer_task',
-        description: 'Transfer task to specialist agent',
-        trigger: 'complexity_threshold'
-      },
-      {
-        name: 'initiate_collaboration',
-        description: 'Start multi-agent collaboration',
-        trigger: 'task_requirements'
-      }
-    ],
-    connections: ['agent-2', 'agent-3'],
-    metrics: {
-      tasksCompleted: 145,
-      avgResponseTime: 0.8,
-      successRate: 0.95
-    }
-  },
-  {
-    id: 'agent-2',
-    name: 'Analysis Specialist',
-    model: 'gpt-3.5-turbo',
-    type: 'specialist',
-    status: 'idle',
-    instructions: 'Specialize in data analysis and pattern recognition',
-    capabilities: ['data_analysis', 'pattern_recognition', 'insight_generation'],
-    functions: [
-      {
-        name: 'analyze_data',
-        description: 'Perform deep data analysis',
-        trigger: 'data_complexity'
-      }
-    ],
-    connections: ['agent-1'],
-    metrics: {
-      tasksCompleted: 89,
-      avgResponseTime: 1.2,
-      successRate: 0.92
-    }
-  }
-];
-
-const initialTasks: SwarmTask[] = [
-  {
-    id: 'task-1',
-    title: 'Complex Data Analysis',
-    status: 'in_progress',
-    assignedAgent: 'agent-2',
-    priority: 'high',
-    context: 'Analyze customer behavior patterns',
-    createdAt: new Date().toISOString(),
-    transferHistory: [
-      {
-        from: 'agent-1',
-        to: 'agent-2',
-        reason: 'Specialized analysis required',
-        timestamp: new Date().toISOString()
-      }
-    ]
-  }
-];
-
 export default function AgentSwarm() {
-  const [agents, setAgents] = useState<SwarmAgent[]>(initialAgents);
-  const [tasks, setTasks] = useState<SwarmTask[]>(initialTasks);
+  const { state } = useIntegrationState();
+  const [agents, setAgents] = useState<SwarmAgent[]>([]);
+  const [tasks, setTasks] = useState<SwarmTask[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<SwarmAgent | null>(null);
   const [showMetrics, setShowMetrics] = useState(true);
+
+  useEffect(() => {
+    const fetchedAgents = state.integrations.flatMap(integration => integration.agents || []);
+    setAgents(fetchedAgents);
+  }, [state]);
+
+  useEffect(() => {
+    const fetchedTasks = state.integrations.flatMap(integration => integration.tasks || []);
+    setTasks(fetchedTasks);
+  }, [state]);
 
   const handleAgentSelect = (agent: SwarmAgent) => {
     setSelectedAgent(selectedAgent?.id === agent.id ? null : agent);

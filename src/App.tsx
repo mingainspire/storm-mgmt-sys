@@ -43,13 +43,10 @@ function App() {
             <ManagementControls />
           </div>
         );
-      default:
+      case 'dashboard':
         return (
           <div className="space-y-8">
-            <WorkflowVisualizer />
-            <SystemIntegration />
             <TaskQueue />
-            <ManagementControls />
           </div>
         );
     }
