@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useIntegrationState } from './useIntegrationState';
 import { Integration } from './types';
-import { Globe, Database, Cloud, Server, Plus, Settings, Trash2, Download, Upload, RefreshCcw, AlertTriangle, Check, Clock } from 'lucide-react';
+import { Globe, Database, Cloud, Server, Plus, Settings, Trash2, Download, Upload, RefreshCcw, AlertTriangle, Check, Clock, Link, Sliders } from 'lucide-react';
 
 export default function SystemIntegrations() {
   const { state, dispatch, exportState, importState, resetState } = useIntegrationState();
@@ -317,6 +317,22 @@ export default function SystemIntegrations() {
                 </div>
               </div>
             )}
+
+            <div className="mt-4">
+              <h4 className="text-sm font-medium text-gray-200 mb-2">App Connections</h4>
+              <div className="flex items-center gap-2">
+                <Link className="w-4 h-4 text-gray-400" />
+                <span className="text-sm text-gray-300">Connected to: {integration.name}</span>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <h4 className="text-sm font-medium text-gray-200 mb-2">Settings</h4>
+              <div className="flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-gray-400" />
+                <span className="text-sm text-gray-300">Configuration: {integration.config?.maxRetries} retries, {integration.config?.timeout}ms timeout</span>
+              </div>
+            </div>
           </div>
         ))}
       </div>
